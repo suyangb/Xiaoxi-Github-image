@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>远程图片元数据示例</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #dbe1ea;
+        --primary: #0f766e;
+        --primary-foreground: #ffffff;
+        --danger: #b91c1c;
+        --shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 28%),
+          linear-gradient(180deg, #fbfcfe 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .page {
+        width: min(1200px, calc(100vw - 32px));
+        margin: 32px auto 48px;
+      }
+
+      .hero {
+        margin-bottom: 20px;
+      }
+
+      .hero h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 4vw, 42px);
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .panel,
+      .status,
+      .gallery-shell {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+      }
+
+      .panel {
+        padding: 24px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .span-4 {
+        grid-column: span 4;
+      }
+
+      .span-3 {
+        grid-column: span 3;
+      }
+
+      .span-2 {
+        grid-column: span 2;
+      }
+
+      .field label {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .field input,
+      .field select {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font: inherit;
+        color: var(--text);
+      }
+
+      .field input:focus,
+      .field select:focus {
+        outline: 2px solid rgba(15, 118, 110, 0.2);
+        border-color: rgba(15, 118, 110, 0.55);
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+
+      button {
+        height: 44px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 14px;
+        font: inherit;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .primary {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        box-shadow: 0 10px 24px rgba(15, 118, 110, 0.24);
+      }
+
+      .secondary {
+        background: #eef4f7;
+        color: var(--text);
+      }
+
+      .status {
+        margin-top: 18px;
+        padding: 16px 18px;
+        color: var(--muted);
+      }
+
+      .status.error {
+        border-color: rgba(185, 28, 28, 0.2);
+        color: var(--danger);
+        background: #fff6f6;
+      }
+
+      .gallery-shell {
+        margin-top: 22px;
+        overflow: hidden;
+      }
+
+      .gallery-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .gallery-header h2 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .gallery-meta {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .gallery {
+        display: grid;
+        gap: 18px;
+        padding: 22px;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      }
+
+      .empty {
+        padding: 36px 22px 42px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+
+      .thumb-wrap {
+        aspect-ratio: 4 / 3;
+        background:
+          linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(14, 165, 233, 0.08)),
+          #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .thumb-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .card-body {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .card-title {
+        font-weight: 700;
+        word-break: break-all;
+      }
+
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 12px;
+      }
+
+      .badge.warn {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+
+      .meta-list {
+        display: grid;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .card-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 4px;
+      }
+
+      .card-actions a,
+      .card-actions button {
+        flex: 1;
+        text-align: center;
+        text-decoration: none;
+      }
+
+      .small {
+        height: 38px;
+        border-radius: 12px;
+      }
+
+      .hint {
+        margin-top: 14px;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      @media (max-width: 920px) {
+        .span-4,
+        .span-3,
+        .span-2 {
+          grid-column: span 12;
+        }
+
+        .gallery-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>业务 API Key 图片元数据示例</h1>
+        <p>
+          输入远程服务地址、业务 API Key 和仓库名称后，页面会调用开放 API
+          获取图片元数据，并在下方直接显示图片墙。你可以切换使用原始链接或 CDN 链接作为展示地址。
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="grid">
+          <div class="field span-4">
+            <label for="baseUrl">远程服务地址</label>
+            <input id="baseUrl" value="http://127.0.0.1:38471" placeholder="http://127.0.0.1:38471" />
+          </div>
+          <div class="field span-4">
+            <label for="apiKey">业务 API Key</label>
+            <input id="apiKey" placeholder="请输入业务 API Key" />
+          </div>
+          <div class="field span-2">
+            <label for="repoName">仓库名称</label>
+            <select id="repoName">
+              <option value="">请先填写远程服务地址和业务 API Key</option>
+            </select>
+          </div>
+          <div class="field span-2">
+            <label for="owner">Owner（可选）</label>
+            <input id="owner" placeholder="如：SongsongsongXi" />
+          </div>
+          <div class="field span-3">
+            <label for="linkMode">展示地址</label>
+            <select id="linkMode">
+              <option value="original">原始链接</option>
+              <option value="cdn">CDN 链接</option>
+            </select>
+          </div>
+          <div class="field span-2">
+            <label for="pageSize">加载条数</label>
+            <select id="pageSize">
+              <option value="24">24</option>
+              <option value="48" selected>48</option>
+              <option value="96">96</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="loadButton" class="primary">获取图片元数据</button>
+          <button id="copyCurlButton" class="secondary">复制示例请求</button>
+        </div>
+
+        <div id="status" class="status">等待输入参数后开始请求。</div>
+        <div class="hint">
+          提示：`repo_name` 为服务端记录中的仓库名，不是完整的 `owner/repo`。如果你的业务 API Key 只允许某几个仓库，
+          页面只能读取这些仓库里的数据。
+        </div>
+        <div class="hint">
+          请不要直接双击以 `file://` 方式打开这个页面。请通过本地图床前端服务访问，例如
+          <code>http://localhost:5173/business-api-demo.html</code>，否则浏览器会把本地文件当成独立安全域处理，导致请求或跳转异常。
+        </div>
+      </section>
+
+      <section class="gallery-shell">
+        <div class="gallery-header">
+          <div>
+            <h2>图片展示</h2>
+            <div id="galleryMeta" class="gallery-meta">尚未加载数据</div>
+          </div>
+        </div>
+        <div id="gallery" class="gallery"></div>
+        <div id="emptyState" class="empty">填写参数后点击“获取图片元数据”。</div>
+      </section>
+    </main>
+
+    <script>
+      const baseUrlInput = document.getElementById("baseUrl");
+      const apiKeyInput = document.getElementById("apiKey");
+      const repoNameInput = document.getElementById("repoName");
+      const ownerInput = document.getElementById("owner");
+      const linkModeInput = document.getElementById("linkMode");
+      const pageSizeInput = document.getElementById("pageSize");
+      const loadButton = document.getElementById("loadButton");
+      const copyCurlButton = document.getElementById("copyCurlButton");
+      const statusBox = document.getElementById("status");
+      const galleryMeta = document.getElementById("galleryMeta");
+      const gallery = document.getElementById("gallery");
+      const emptyState = document.getElementById("emptyState");
+
+      let latestItems = [];
+      let repoRefreshTimer = null;
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function formatBytes(size) {
+        if (size < 1024) return `${size} B`;
+        if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+        return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+      }
+
+      function formatTime(value) {
+        try {
+          return new Intl.DateTimeFormat("zh-CN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(new Date(value));
+        } catch {
+          return value || "--";
+        }
+      }
+
+      function getDisplayUrl(item) {
+        if (linkModeInput.value === "cdn") {
+          return item.cdn_url_current || item.cdn_url_snapshot || "";
+        }
+        return item.original_url || "";
+      }
+
+      function setStatus(message, isError = false) {
+        statusBox.textContent = message;
+        statusBox.className = isError ? "status error" : "status";
+      }
+
+      function setRepoOptions(items) {
+        repoNameInput.innerHTML = "";
+
+        if (!items.length) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "当前业务 API Key 没有可用仓库";
+          repoNameInput.appendChild(option);
+          return;
+        }
+
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "请选择仓库";
+        repoNameInput.appendChild(placeholder);
+
+        items.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.repo_name;
+          option.textContent = `${item.owner}/${item.repo_name}`;
+          option.dataset.owner = item.owner;
+          repoNameInput.appendChild(option);
+        });
+      }
+
+      async function loadRepos(silent = false) {
+        const baseUrl = baseUrlInput.value.trim().replace(/\/+$/g, "");
+        const apiKey = apiKeyInput.value.trim();
+
+        if (!baseUrl || !apiKey) {
+          setRepoOptions([]);
+          repoNameInput.firstElementChild.textContent = "请先填写远程服务地址和业务 API Key";
+          return;
+        }
+
+        if (!silent) {
+          setStatus("正在读取业务 API Key 可访问的仓库列表...");
+        }
+
+        try {
+          const response = await fetch(`${baseUrl}/api/open/repos`, {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+            },
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.message || `读取仓库列表失败，状态码 ${response.status}`);
+          }
+
+          const items = Array.isArray(data.items) ? data.items : [];
+          const currentRepo = repoNameInput.value;
+          setRepoOptions(items);
+
+          const matched = items.find((item) => item.repo_name === currentRepo);
+          if (matched) {
+            repoNameInput.value = matched.repo_name;
+            ownerInput.value = matched.owner;
+          } else if (items.length === 1) {
+            repoNameInput.value = items[0].repo_name;
+            ownerInput.value = items[0].owner;
+          }
+
+          if (!silent) {
+            setStatus(`已加载 ${items.length} 个可访问仓库。`);
+          }
+        } catch (error) {
+          setRepoOptions([]);
+          repoNameInput.firstElementChild.textContent = "仓库列表读取失败";
+          if (!silent) {
+            setStatus(error instanceof Error ? error.message : "仓库列表读取失败。", true);
+          }
+        }
+      }
+
+      function renderItems(items) {
+        latestItems = items;
+        gallery.innerHTML = "";
+
+        if (!items.length) {
+          emptyState.hidden = false;
+          emptyState.textContent = "当前条件下没有读取到图片记录。";
+          galleryMeta.textContent = "共 0 条记录";
+          return;
+        }
+
+        emptyState.hidden = true;
+        const hasCdn = items.some((item) => item.cdn_url_current || item.cdn_url_snapshot);
+        galleryMeta.textContent = `共 ${items.length} 条记录，当前展示：${linkModeInput.value === "cdn" ? "CDN 链接" : "原始链接"}${linkModeInput.value === "cdn" && !hasCdn ? "（当前记录未配置 CDN）" : ""}`;
+
+        items.forEach((item) => {
+          const displayUrl = getDisplayUrl(item);
+          const imageUrl = displayUrl || item.original_url || "";
+          const cdnMissing = linkModeInput.value === "cdn" && !displayUrl;
+
+          const article = document.createElement("article");
+          article.className = "card";
+          article.innerHTML = `
+            <div class="thumb-wrap">
+              ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" referrerpolicy="no-referrer" />` : `<span style="color:#64748b;">无可用图片地址</span>`}
+            </div>
+            <div class="card-body">
+              <div class="card-title">${escapeHtml(item.name)}</div>
+              <div class="badge-row">
+                <span class="badge">${escapeHtml(item.owner)}/${escapeHtml(item.repo_name)}</span>
+                ${cdnMissing ? '<span class="badge warn">未配置 CDN</span>' : ""}
+              </div>
+              <div class="meta-list">
+                <div>路径：${escapeHtml(item.path || "--")}</div>
+                <div>大小：${formatBytes(Number(item.size || 0))}</div>
+                <div>上传时间：${formatTime(item.uploaded_at)}</div>
+              </div>
+              <div class="card-actions">
+                <a class="secondary small" href="${escapeHtml(imageUrl || "#")}" target="_blank" rel="noreferrer">打开图片</a>
+                <button class="primary small" data-url="${escapeHtml(displayUrl || item.original_url || "")}">复制链接</button>
+              </div>
+            </div>
+          `;
+
+          const copyButton = article.querySelector("button[data-url]");
+          copyButton.addEventListener("click", async () => {
+            const targetUrl = copyButton.getAttribute("data-url");
+            if (!targetUrl) {
+              setStatus("当前记录没有可复制的链接。", true);
+              return;
+            }
+            await navigator.clipboard.writeText(targetUrl);
+            setStatus(`已复制 ${item.name} 的${linkModeInput.value === "cdn" ? " CDN" : "原始"}链接。`);
+          });
+
+          gallery.appendChild(article);
+        });
+      }
+
+      async function loadImages() {
+        const baseUrl = baseUrlInput.value.trim().replace(/\/+$/g, "");
+        const apiKey = apiKeyInput.value.trim();
+        const repoName = repoNameInput.value.trim();
+        const owner = ownerInput.value.trim();
+        const pageSize = pageSizeInput.value.trim();
+
+        if (!baseUrl || !apiKey || !repoName) {
+          setStatus("请至少填写远程服务地址、业务 API Key 和仓库名称。", true);
+          return;
+        }
+
+        loadButton.disabled = true;
+        setStatus("正在请求远程服务，请稍候...");
+
+        try {
+          const url = new URL(`${baseUrl}/api/open/images`);
+          url.searchParams.set("repo_name", repoName);
+          url.searchParams.set("page", "1");
+          url.searchParams.set("page_size", pageSize);
+          if (owner) {
+            url.searchParams.set("owner", owner);
+          }
+
+          const response = await fetch(url.toString(), {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+            },
+          });
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.message || `请求失败，状态码 ${response.status}`);
+          }
+
+          renderItems(Array.isArray(data.items) ? data.items : []);
+          setStatus(`请求成功，已读取 ${data.items?.length || 0} 条记录。`);
+        } catch (error) {
+          gallery.innerHTML = "";
+          emptyState.hidden = false;
+          emptyState.textContent = "加载失败，请检查远程服务地址、业务 API Key 和仓库配置。";
+          galleryMeta.textContent = "加载失败";
+          setStatus(error instanceof Error ? error.message : "加载失败。", true);
+        } finally {
+          loadButton.disabled = false;
+        }
+      }
+
+      loadButton.addEventListener("click", () => {
+        void loadImages();
+      });
+
+      repoNameInput.addEventListener("change", () => {
+        const selected = repoNameInput.selectedOptions[0];
+        if (selected?.dataset?.owner) {
+          ownerInput.value = selected.dataset.owner;
+        }
+      });
+
+      linkModeInput.addEventListener("change", () => {
+        renderItems(latestItems);
+      });
+
+      function scheduleRepoRefresh() {
+        if (repoRefreshTimer) {
+          clearTimeout(repoRefreshTimer);
+        }
+        repoRefreshTimer = setTimeout(() => {
+          void loadRepos(true);
+        }, 500);
+      }
+
+      baseUrlInput.addEventListener("input", scheduleRepoRefresh);
+      apiKeyInput.addEventListener("input", scheduleRepoRefresh);
+      baseUrlInput.addEventListener("blur", () => void loadRepos(true));
+      apiKeyInput.addEventListener("blur", () => void loadRepos(true));
+
+      copyCurlButton.addEventListener("click", async () => {
+        const baseUrl = baseUrlInput.value.trim().replace(/\/+$/g, "");
+        const apiKey = apiKeyInput.value.trim() || "YOUR_API_KEY";
+        const repoName = repoNameInput.value.trim() || "YOUR_REPO_NAME";
+        const owner = ownerInput.value.trim();
+        const pageSize = pageSizeInput.value.trim();
+        const url = new URL(`${baseUrl || "http://127.0.0.1:38471"}/api/open/images`);
+        url.searchParams.set("repo_name", repoName);
+        url.searchParams.set("page", "1");
+        url.searchParams.set("page_size", pageSize || "48");
+        if (owner) {
+          url.searchParams.set("owner", owner);
+        }
+
+        const command = `curl -H "Authorization: Bearer ${apiKey}" "${url.toString()}"`;
+        await navigator.clipboard.writeText(command);
+        setStatus("示例请求命令已复制。");
+      });
+
+      if (window.location.protocol === "file:") {
+        setStatus("当前是以 file:// 方式打开，请改为通过 http://localhost:5173/business-api-demo.html 访问。", true);
+      } else {
+        void loadRepos(true);
+      }
+    </script>
+  </body>
+</html>
